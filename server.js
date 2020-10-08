@@ -33,8 +33,43 @@ app.get('/search', async (req, res, next) => {
     return next(error);
   }
 
-  res.json(data);
+  const films = data.results;
+  const pArray = films.map(async film => {
+    let fetchedCharacters = await getCharacterData(film.characters);
+    console.log(fetchedCharacters)
+    return {
+      title: film.title, 
+      episode_id: film.episode_id, 
+      characters: fetchedCharacters 
+    };
+  });
+  const newFilms = await Promise.all(pArray);
+  console.log(newFilms);
+
+  res.json(newFilms);
 });
+
+async function getCharacterData (characters) {
+  let fetchedCharacters = [];
+  for (let characterUrl of characters) {
+    try {
+      response = await axios.get(characterUrl);
+    } catch (err) {
+      const error = new HttpError(
+        'Fetching character failed, please try again later', 
+        500
+      );
+      return next(error);
+    }
+    const character = response.data;
+    if (!character) {
+      const error = new HttpError('Could not find this character', 422);
+      throw error;
+    }
+    fetchedCharacters.push(character)
+  }
+  return fetchedCharacters;
+}  
 
 app.listen(3000, () => {
   console.log('Server started!');
