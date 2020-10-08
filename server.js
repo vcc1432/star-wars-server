@@ -11,14 +11,15 @@ app.use(express.json());
 app.use(express.static('public'));
 
 app.get('/search', async (req, res, next) => {
-  let query = req.query.q;
+  const query = req.query.q;
+  const order = req.query.orderBy.toLowerCase();
   let response; 
 
   try {
     response = await axios.get(`https://swapi.dev/api/films/?search=${query}`);
   } catch (err) {
     const error = new HttpError(
-      'Fetching places failed, please try again later', 
+      'Fetching films failed, please try again later', 
       500
     );
     return next(error);
@@ -35,21 +36,30 @@ app.get('/search', async (req, res, next) => {
 
   const films = data.results;
   const pArray = films.map(async film => {
+    // character array contains swapi urls, so first fetch character data
     let fetchedCharacters = await getCharacterData(film.characters);
-    console.log(fetchedCharacters)
+    
+    // now sort characters by height, asc or desc
+    fetchedCharacters.sort((a, b) => {
+      if (order === 'desc') {
+        return parseFloat(b.height) - parseFloat(a.height);
+      } else {
+        return parseFloat(a.height) - parseFloat(b.height);
+      }
+    });
+
     return {
-      title: film.title, 
-      episode_id: film.episode_id, 
+      ...film, 
       characters: fetchedCharacters 
     };
   });
   const newFilms = await Promise.all(pArray);
-  console.log(newFilms);
+  const newData = { ... data, results: newFilms }
 
-  res.json(newFilms);
+  res.json(newData);
 });
 
-async function getCharacterData (characters) {
+const getCharacterData = async (characters) => {
   let fetchedCharacters = [];
   for (let characterUrl of characters) {
     try {
@@ -59,7 +69,7 @@ async function getCharacterData (characters) {
         'Fetching character failed, please try again later', 
         500
       );
-      return next(error);
+      throw error;
     }
     const character = response.data;
     if (!character) {
