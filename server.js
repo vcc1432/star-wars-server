@@ -19,25 +19,17 @@ app.get('/search', async (req, res, next) => {
     response = await axios.get(`https://swapi.dev/api/films/?search=${query}`);
   } catch (err) {
     const error = new HttpError(
-      'Fetching films failed, please try again later', 
+      'Fetching movies failed, please try again later', 
       500
     );
     return next(error);
   }
 
   const data = response.data;
-  if (!data.results || data.results.length === 0) {
-    const error = new HttpError(
-      'Could not find a film for the provided query.', 
-      404
-    );
-    return next(error);
-  }
-
-  const films = data.results;
-  const pArray = films.map(async film => {
+  const movies = data.results;
+  const pArray = movies.map(async movie => {
     // character array contains swapi urls, so first fetch character data
-    let fetchedCharacters = await getCharacterData(film.characters);
+    let fetchedCharacters = await getCharacterData(movie.characters);
     
     // now sort characters by height, asc or desc
     fetchedCharacters.sort((a, b) => {
@@ -49,12 +41,12 @@ app.get('/search', async (req, res, next) => {
     });
 
     return {
-      ...film, 
+      ...movie, 
       characters: fetchedCharacters 
     };
   });
-  const newFilms = await Promise.all(pArray);
-  const newData = { ... data, results: newFilms }
+  const newMovies = await Promise.all(pArray);
+  const newData = { ... data, results: newMovies }
 
   res.json(newData);
 });
@@ -81,6 +73,6 @@ const getCharacterData = async (characters) => {
   return fetchedCharacters;
 }  
 
-app.listen(3000, () => {
+app.listen(5000, () => {
   console.log('Server started!');
 })
