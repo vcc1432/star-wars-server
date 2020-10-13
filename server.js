@@ -29,9 +29,7 @@ app.get('/search', async (req, res, next) => {
 });
 
 app.get('/search/:id', async (req, res, next) => {
-  console.log('ID:', req.params.id)
   const id = req.params.id;
-  // const order = req.query.orderBy.toLowerCase();
   let response; 
 
   try {
@@ -45,7 +43,6 @@ app.get('/search/:id', async (req, res, next) => {
   }
 
   const data = response.data;
-  console.log('data:', data);
 
   // character array contains swapi urls, so first fetch character data
   let fetchedCharacters = await getCharacterData(data.characters);
