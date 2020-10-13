@@ -24,30 +24,38 @@ app.get('/search', async (req, res, next) => {
     );
     return next(error);
   }
+  const data = response.data;
+  res.json(data);
+});
+
+app.get('/search/:id', async (req, res, next) => {
+  console.log('ID:', req.params.id)
+  const id = req.params.id;
+  // const order = req.query.orderBy.toLowerCase();
+  let response; 
+
+  try {
+    response = await axios.get(`https://swapi.dev/api/films/${id}`);
+  } catch (err) {
+    const error = new HttpError(
+      'Fetching movie failed, please try again later', 
+      500
+    );
+    return next(error);
+  }
 
   const data = response.data;
-  const movies = data.results;
-  const pArray = movies.map(async movie => {
-    // character array contains swapi urls, so first fetch character data
-    let fetchedCharacters = await getCharacterData(movie.characters);
+  console.log('data:', data);
+
+  // character array contains swapi urls, so first fetch character data
+  let fetchedCharacters = await getCharacterData(data.characters);
     
-    // now sort characters by height, asc or desc
-    fetchedCharacters.sort((a, b) => {
-      if (order === 'desc') {
-        return parseFloat(b.height) - parseFloat(a.height);
-      } else {
-        return parseFloat(a.height) - parseFloat(b.height);
-      }
-    });
-
-    return {
-      ...movie, 
-      characters: fetchedCharacters 
-    };
+  // now sort characters by height asc
+  fetchedCharacters.sort((a, b) => {
+    return parseFloat(a.height) - parseFloat(b.height);
   });
-  const newMovies = await Promise.all(pArray);
-  const newData = { ... data, results: newMovies }
-
+  
+  const newData = { ... data, characters: fetchedCharacters  };
   res.json(newData);
 });
 
