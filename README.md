@@ -15,13 +15,9 @@ Example: `http://localhost:5000/search?q=jedi`.
 
 Example: `http://localhost:5000/search?q=jedi`. 
 
-
----
 ## Requirements
 
 For development, you will only need Node.js and a node global package, NPM, installed in your environment.
-
----
 
 ## Install
 
