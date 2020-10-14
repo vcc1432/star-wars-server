@@ -12,7 +12,6 @@ app.use(express.static('public'));
 
 app.get('/search', async (req, res, next) => {
   const query = req.query.q;
-  const order = req.query.orderBy.toLowerCase();
   let response; 
 
   try {
